@@ -9,7 +9,6 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
-        <!-- //android:icon="@mipmap-xhdpi/ic_launcher" -->
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="保存分享"
