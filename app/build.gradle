@@ -3,6 +3,7 @@ plugins {
 }
 
 android {
+    namespace 'com.example.simplefilesaver'
     compileSdk 33
     defaultConfig {
         applicationId "com.example.simplefilesaver"
