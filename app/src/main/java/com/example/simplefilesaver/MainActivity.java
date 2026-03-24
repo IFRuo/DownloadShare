@@ -2,12 +2,15 @@ package com.example.simplefilesaver;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.OpenableColumns;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -24,6 +27,13 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // 如果是启动器启动，直接关闭（无界面）
+        if (Intent.ACTION_MAIN.equals(getIntent().getAction())) {
+            finish();
+            return;
+        }
+
         // 检查并请求存储权限（Android 10及以下需要）
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -65,14 +75,10 @@ public class MainActivity extends Activity {
 
     private void saveFileFromUri(Uri uri) {
         try {
-            // 获取文件名（如果Uri无法提供则生成时间戳）
-            String fileName = "file_" + System.currentTimeMillis();
-            if (uri.getPath() != null) {
-                String path = uri.getPath();
-                int lastSlash = path.lastIndexOf('/');
-                if (lastSlash >= 0) {
-                    fileName = path.substring(lastSlash + 1);
-                }
+            // 获取原始文件名（含后缀）
+            String fileName = getFileNameFromUri(uri);
+            if (fileName == null || fileName.isEmpty()) {
+                fileName = "file_" + System.currentTimeMillis();
             }
 
             // 目标目录：Downloads/SimpleFileSaver/
@@ -99,6 +105,32 @@ public class MainActivity extends Activity {
         }
     }
 
+    private String getFileNameFromUri(Uri uri) {
+        String fileName = null;
+        if (uri.getScheme() != null && uri.getScheme().equals(ContentResolver.SCHEME_CONTENT)) {
+            // 对于 content:// 类型的 Uri，通过 ContentResolver 查询文件名
+            try (Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                    if (nameIndex != -1) {
+                        fileName = cursor.getString(nameIndex);
+                    }
+                }
+            }
+        }
+        if (fileName == null) {
+            // 对于 file:// 类型的 Uri，直接取路径最后一段
+            String path = uri.getPath();
+            if (path != null) {
+                int lastSlash = path.lastIndexOf('/');
+                if (lastSlash >= 0) {
+                    fileName = path.substring(lastSlash + 1);
+                }
+            }
+        }
+        return fileName;
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -112,4 +144,3 @@ public class MainActivity extends Activity {
         }
     }
 }
-
