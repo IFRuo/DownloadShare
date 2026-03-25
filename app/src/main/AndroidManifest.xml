@@ -7,8 +7,9 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
+        android:icon="@mipmap-xhdpi/ic_launcher"
         android:allowBackup="true"
-        android:label="QQ"
+        android:label="保存分享"
         android:theme="@style/Theme.AppCompat.Light">
         <activity
             android:name=".MainActivity"
